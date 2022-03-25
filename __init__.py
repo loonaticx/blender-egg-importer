@@ -11,7 +11,7 @@ bl_info = {
 
 import bpy
 if bpy.app.version < (2, 80):
-    bl_info["blender"] = (2, 74, 0) # Needed for normals_split_custom_set
+    bl_info["blender"] = (2, 74, 0)  # Needed for normals_split_custom_set
 
 
 if "loaded" in locals():
@@ -86,7 +86,8 @@ class IMPORT_OT_egg(bpy.types.Operator, ImportHelper):
 
 
 def menu_func(self, context):
-    self.layout.operator(IMPORT_OT_egg.bl_idname, text="Panda3D (.egg)")
+    self.layout.operator(IMPORT_OT_egg.bl_idname, text = "Panda3D (.egg)")
+
 
 def register():
     bpy.utils.register_class(IMPORT_OT_egg)
@@ -96,6 +97,7 @@ def register():
     else:
         bpy.types.INFO_MT_file_import.append(menu_func)
 
+
 def unregister():
     if bpy.app.version >= (2, 80):
         bpy.types.TOPBAR_MT_file_import.remove(menu_func)
@@ -103,6 +105,7 @@ def unregister():
         bpy.types.INFO_MT_file_import.remove(menu_func)
 
     bpy.utils.unregister_class(IMPORT_OT_egg)
+
 
 if __name__ == "__main__":
     register()
