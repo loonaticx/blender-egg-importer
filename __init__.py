@@ -40,8 +40,8 @@ class IMPORT_OT_egg(bpy.types.Operator, ImportHelper):
     filename_ext = ".egg"
     filter_glob = props.StringProperty(default="*.egg;*.egg.pz;*.egg.gz", options={'HIDDEN'})
 
-    directory = props.StringProperty(name="Directory", options={'HIDDEN'})
-    files = props.CollectionProperty(type=bpy.types.OperatorFileListElement, options={'HIDDEN'})
+    directory: props.StringProperty(name="Directory", options={'HIDDEN'})
+    files: props.CollectionProperty(type=bpy.types.OperatorFileListElement, options={'HIDDEN'})
 
     load_external = props.BoolProperty(name="Load external references", description="Loads other .egg files referenced by this file as separate scenes, and instantiates them using DupliGroups.")
     auto_bind = props.BoolProperty(name="Auto bind", default=True, description="Automatically tries to bind actions to armatures.")
