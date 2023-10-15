@@ -98,7 +98,23 @@ def menu_func(self, context):
     self.layout.operator(IMPORT_OT_egg.bl_idname, text = "Panda3D (.egg)")
 
 
+def make_annotations(cls):
+    """Converts class fields to annotations if running with Blender 2.8"""
+    if bpy.app.version < (2, 80):
+        return cls
+    bl_props = {k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
+    if bl_props:
+        if '__annotations__' not in cls.__dict__:
+            setattr(cls, '__annotations__', {})
+        annotations = cls.__dict__['__annotations__']
+        for k, v in bl_props.items():
+            annotations[k] = v
+            delattr(cls, k)
+    return cls
+
+
 def register():
+    make_annotations(IMPORT_OT_egg)
     bpy.utils.register_class(IMPORT_OT_egg)
 
     if bpy.app.version >= (2, 80):
