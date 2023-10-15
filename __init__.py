@@ -40,8 +40,17 @@ class IMPORT_OT_egg(bpy.types.Operator, ImportHelper):
     filename_ext = ".egg"
     filter_glob = props.StringProperty(default="*.egg;*.egg.pz;*.egg.gz", options={'HIDDEN'})
 
-    directory: props.StringProperty(name="Directory", options={'HIDDEN'})
-    files: props.CollectionProperty(type=bpy.types.OperatorFileListElement, options={'HIDDEN'})
+    if bpy.app.version < (2, 80):
+        directory = props.StringProperty(name="Directory", options={'HIDDEN'})
+        files = props.CollectionProperty(type=bpy.types.OperatorFileListElement, options={'HIDDEN'})
+    else:
+        # Blender 2.79 still wants to compile this, however this syntax is considered invalid for this version.
+        # To avoid a measly crash, let's just shrug off the syntax error for older versions.
+        try:
+            directory: props.StringProperty(name="Directory", options={'HIDDEN'})
+            files: props.CollectionProperty(type=bpy.types.OperatorFileListElement, options={'HIDDEN'})
+        except SyntaxError:
+            pass
 
     load_external = props.BoolProperty(name="Load external references", description="Loads other .egg files referenced by this file as separate scenes, and instantiates them using DupliGroups.")
     auto_bind = props.BoolProperty(name="Auto bind", default=True, description="Automatically tries to bind actions to armatures.")
