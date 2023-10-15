@@ -258,7 +258,13 @@ class EggContext:
         for path, group in self.external_groups.items():
             # Create a separate scene for this model.
             scene = bpy.data.scenes.new(path)
-            bpy.context.screen.scene = scene
+
+            # XXX New blender API breaks this
+            # https://blender.stackexchange.com/a/179196
+            if bpy.app.version <= (2, 79, 7):
+                bpy.context.screen.scene = scene
+            else:
+                bpy.context.window.scene = scene
 
             # Convert the external scene.
             path = os.path.join(orig_search_dir, path)
@@ -271,7 +277,10 @@ class EggContext:
             for obj in scene.objects:
                 group.objects.link(obj)
 
-        bpy.context.screen.scene = orig_scene
+        if bpy.app.version <= (2, 79, 7):
+            bpy.context.screen.scene = orig_scene
+        else:
+            bpy.context.window.scene = orig_scene
         self.search_dir = orig_search_dir
 
     def auto_bind(self):
