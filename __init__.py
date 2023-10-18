@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Import Panda3D .egg models",
     "author": "rdb, loonatic",
-    "version": (2, 3),
+    "version": (2, 3, 1),
     "blender": (2, 80, 0),
     "location": "File > Import > Panda3D (.egg)",
     "description": "",
@@ -52,8 +52,16 @@ class IMPORT_OT_egg(bpy.types.Operator, ImportHelper):
         except SyntaxError:
             pass
 
-    load_external = props.BoolProperty(name="Load external references", description="Loads other .egg files referenced by this file as separate scenes, and instantiates them using DupliGroups.")
-    auto_bind = props.BoolProperty(name="Auto bind", default=True, description="Automatically tries to bind actions to armatures.")
+    load_external = props.BoolProperty(
+        name="Load external references",
+        description="Loads other .egg files referenced by this file as separate scenes, "
+                    "and instantiates them using DupliGroups."
+    )
+    auto_bind = props.BoolProperty(
+        name="Auto bind",
+        default=True,
+        description="Automatically tries to bind actions to armatures."
+    )
 
     def execute(self, context):
         context = importer.EggContext()
