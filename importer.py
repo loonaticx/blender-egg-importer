@@ -1433,7 +1433,9 @@ class EggGroup(EggGroupNode):
 
         # Reference those loops in the polygon.
         poly.loop_start = loop_offset
-        poly.loop_total = len(prim.indices)
+        # Newer versions of Blender have changed loop_total to be readonly, resulting in a crash.
+        if bpy.app.version > (3, 50):
+            poly.loop_total = len(prim.indices)
 
         # Assign the highest priority texture that uses a given UV set to
         # the UV texture.  If there are multiple textures with the same
