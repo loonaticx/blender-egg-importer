@@ -477,9 +477,11 @@ class EggMaterial:
         bsdf.inputs["Metallic"].default_value = bmat.metallic
         if self.ior is not None:
             bsdf.inputs["IOR"].default_value = self.ior
-        bsdf.inputs["Emission"].default_value = self.emit
+        emission_key = "Emission" if bpy.app.version < (4, 0) else "Emission Color"
+        bsdf.inputs[emission_key].default_value = self.emit
         if not any(self.spec[:3]):
-            bsdf.inputs["Specular"].default_value = 0.0
+            specular_key = "Specular" if bpy.app.version < (4, 0) else "Specular IOR Level"
+            bsdf.inputs[specular_key].default_value = 0.0
 
         color_out = bsdf.inputs['Base Color']
         alpha_out = bsdf.inputs['Alpha']
