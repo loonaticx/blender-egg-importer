@@ -477,8 +477,9 @@ class EggMaterial:
         bsdf.inputs["Metallic"].default_value = bmat.metallic
         if self.ior is not None:
             bsdf.inputs["IOR"].default_value = self.ior
-        bsdf.inputs["Emission"].default_value = self.emit
-        if not any(self.spec[:3]):
+        if self.emit and bsdf.inputs.get("Emission"):
+            bsdf.inputs["Emission"].default_value = self.emit
+        if not any(self.spec[:3]) and bsdf.inputs.get("Specular"):
             bsdf.inputs["Specular"].default_value = 0.0
 
         color_out = bsdf.inputs['Base Color']
@@ -1485,9 +1486,11 @@ class EggGroup(EggGroupNode):
                 data.update(calc_edges=True, calc_tessface=True)
 
             if self.have_normals:
-                # Check if the mesh just uses smooth normals.  If so, don't
-                # bother importing custom normals.
-                data.calc_normals()
+                # Check if the mesh just uses smooth normals. If so, don't bother importing custom normals.
+                # NB: calc_normals has been deprecated in blender 4.0
+                # https://projects.blender.org/blender/blender/commit/ab5fc46872b9960b5bb50d98147bea0d677028b9
+                if hasattr(data, "calc_normals"):
+                    data.calc_normals()
                 max_diff = 0
                 for normal1, l in zip(self.normals, data.loops):
                     normal2 = data.vertices[l.vertex_index].normal
