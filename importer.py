@@ -1628,8 +1628,11 @@ class EggGroup(EggGroupNode):
                 for name, value in self.properties.items():
                     # We can't have multiple properties with the same name "ObjectType"
                     # So we need to add a delimiter
-                    bpy.context.object[name + str(index)] = value
-                    index += 1
+                    if name.upper() == "OBJECTTYPE":
+                        bpy.context.object[name + str(index)] = value
+                        index += 1
+                    else:
+                        bpy.context.object[name] = value
 
             if self.shape_keys:
                 # Add the basis key first.
