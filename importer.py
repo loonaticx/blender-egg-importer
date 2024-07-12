@@ -1616,10 +1616,16 @@ class EggGroup(EggGroupNode):
                 active = bpy.context.scene.objects.active
                 bpy.context.scene.objects.active = object
 
+            # Assign properties <Name> { value }
+            # Note: currently most feasible with <ObjectType> attributes
             if bpy.app.version < (2, 80):
+                # 2.7 and below
                 for name, value in self.properties.items():
                     bpy.ops.object.game_property_new(type='STRING', name=name)
                     object.game.properties[name].value = value
+            else:
+                for name, value in self.properties.items():
+                    bpy.context.object[name] = value
 
             if self.shape_keys:
                 # Add the basis key first.
