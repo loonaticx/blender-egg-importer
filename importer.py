@@ -1465,6 +1465,17 @@ class EggGroup(EggGroupNode):
         # Edge case: It's possible that a prim may not hold any material (TRef),
         # such as from a collision poly. Typically, Blender acknowledges this and slaps a generated material
         # but it is possible for this to fail (StructRNA of type Material has been removed)
+
+        # It's possible that a prim may not hold any material, such as from a collision poly
+        # Really finnicky hack here, but we are running into a problem where a material is marked as invalid
+        # <bpy_struct, Material invalid> & getting a ReferenceError. Problem is that it will resolve as True
+        try:
+            bmat.id_data
+        except ReferenceError:
+            # StructRNA of type Material has been removed
+            # Data still loosely exists but there is nothing we can do about it at this point.
+            bmat = None
+
         if not bmat:
             return
 
