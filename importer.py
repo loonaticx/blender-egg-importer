@@ -1461,6 +1461,13 @@ class EggGroup(EggGroupNode):
 
         # Check if we already have a material for this combination.
         bmat = prim.material.get_material(self, prim)
+
+        # Edge case: It's possible that a prim may not hold any material (TRef),
+        # such as from a collision poly. Typically, Blender acknowledges this and slaps a generated material
+        # but it is possible for this to fail (StructRNA of type Material has been removed)
+        if not bmat:
+            return
+
         if bmat in self.materials:
             index = self.materials.index(bmat)
         else:
