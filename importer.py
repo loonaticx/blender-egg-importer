@@ -1624,8 +1624,12 @@ class EggGroup(EggGroupNode):
                     bpy.ops.object.game_property_new(type='STRING', name=name)
                     object.game.properties[name].value = value
             else:
+                index = 1
                 for name, value in self.properties.items():
-                    bpy.context.object[name] = value
+                    # We can't have multiple properties with the same name "ObjectType"
+                    # So we need to add a delimiter
+                    bpy.context.object[name + str(index)] = value
+                    index += 1
 
             if self.shape_keys:
                 # Add the basis key first.
