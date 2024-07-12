@@ -422,6 +422,13 @@ class EggMaterial:
         if key in self.materials:
             return self.materials[key]
 
+        # <Polygon> objects may have more the one <TRef> assigned to them.
+        # However, EGG files most commonly have either 1 or 0 TRefs associated with them.
+        # If a <Polygon> has two <TRefs> registered, regardless if that TRef is used in
+        # another area, it will become its own unique material.
+        # If there is a Polygon with two+ TRefs, a new material will be made with the TRef names aggregated.
+        self.name = '_'.join(tex.name for tex in textures)
+
         bmat = bpy.data.materials.new(self.name)
         bmat.specular_intensity = 1.0
 
@@ -792,6 +799,7 @@ class EggMaterial:
 class EggTexture:
     def __init__(self, name, image):
         self.texture = bpy.data.textures.new(name, 'IMAGE')
+        self.name = name
         self.texture.image = image
         self.format = None
         self.envtype = 'modulate'
