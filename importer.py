@@ -1479,8 +1479,8 @@ class EggGroup(EggGroupNode):
         # <bpy_struct, Material invalid> & getting a ReferenceError. Problem is that it will resolve as True
         try:
             bmat.id_data
-        except ReferenceError:
-            # StructRNA of type Material has been removed
+        except (ReferenceError, AttributeError):
+            # StructRNA of type Material has been removed (OR NoneType)
             # Data still loosely exists but there is nothing we can do about it at this point.
             bmat = None
 
