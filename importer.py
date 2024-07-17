@@ -1294,8 +1294,16 @@ class EggGroup(EggGroupNode):
             elif name == 'blenda':
                 self.blend_color[3] = parse_number(values[0])
 
-        elif type in ('COLLIDE', 'OBJECTTYPE'):
+        elif type == 'COLLIDE':
             self.properties[orig_type] = values[0]
+
+        elif type == 'OBJECTTYPE':
+            # It's not uncommon to have more than one ObjectType on an object
+            # So we want to keep them in a list instead of a singular value
+            if orig_type in self.properties.keys():
+                self.properties[orig_type].append(values[0])
+            else:
+                self.properties[orig_type] = [values[0]]
 
         elif type == 'TAG':
             # Odd, but the reference .egg parser really intentionally joins
@@ -1624,13 +1632,14 @@ class EggGroup(EggGroupNode):
                     bpy.ops.object.game_property_new(type='STRING', name=name)
                     object.game.properties[name].value = value
             else:
-                index = 1
                 for name, value in self.properties.items():
                     # We can't have multiple properties with the same name "ObjectType"
                     # So we need to add a delimiter
                     if name.upper() == "OBJECTTYPE":
-                        bpy.context.object[name + str(index)] = value
-                        index += 1
+                        index = 1
+                        for v in value:
+                            bpy.context.object[name + str(index)] = v
+                            index += 1
                     else:
                         bpy.context.object[name] = value
 
