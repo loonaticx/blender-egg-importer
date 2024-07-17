@@ -19,6 +19,8 @@ Find the latest release of the plugin in the [Releases](https://github.com/loona
 
 ## Features
 
+**Please see [this](https://github.com/loonaticx/blender-egg-importer/wiki/Importing-Notes) wiki page on how Egg data is converted to Blender**
+
 Most features supported by bam2egg are implemented.  In particular, however,
 animation support is not yet finished.  Many other features still need to be
 tested.
