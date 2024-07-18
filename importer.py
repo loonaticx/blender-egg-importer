@@ -1137,6 +1137,9 @@ class EggGroupNode(EggNode):
         self.external_refs = []
 
     def begin_child(self, context, type, name, values):
+        """
+        :type context: EggContext
+        """
         type = type.upper()
 
         if type == 'COORDINATESYSTEM':
@@ -1231,6 +1234,7 @@ class EggGroup(EggGroupNode):
         self.external_instance = None
         self.has_billboard = False
         self.has_billboard_center = False
+        self.empty_display_type = "PLAIN_AXES"
 
         if isinstance(parent, EggGroup):
             self.blend_mode = parent.blend_mode
@@ -1331,6 +1335,15 @@ class EggGroup(EggGroupNode):
 
         elif type == 'BILLBOARDCENTER':
             self.has_billboard_center = True
+
+        elif type == "DCS":
+            self.properties[orig_type] = values[0]
+
+        # DCS nodes are used as locators, where the transformation data for the pivot point is important to know.
+        # The ObjectType catch here isn't going to be perfect, but it attempts to assist with any user-defined
+        # ObjectTypes related to dcs...
+        if type == "DCS" or any(["DCS" in v.upper() for v in values]):
+            self.empty_display_type = "ARROWS"
 
         return EggGroupNode.begin_child(self, context, type, name, values)
 
@@ -1674,6 +1687,9 @@ class EggGroup(EggGroupNode):
 
             if bpy.app.version >= (2, 80):
                 bpy.context.view_layer.objects.active = active
+                # Check to see if this node is an empty. If it is, use a 3-axis display for enhanced visibility
+                if object.type == "EMPTY":
+                    object.empty_display_type = self.empty_display_type
             else:
                 bpy.context.scene.objects.active = active
 
