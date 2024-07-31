@@ -1299,7 +1299,11 @@ class EggGroup(EggGroupNode):
                 self.blend_color[3] = parse_number(values[0])
 
         elif type == 'COLLIDE':
-            self.properties[orig_type] = values[0]
+            # Collide tags will often consist of several words,
+            # i.e. "Polyset descend", "Polyset keep descend"
+            # If we don't join values, then we only get the
+            # first value in the array, "Polyset"
+            self.properties[orig_type] = ' '.join(values)
 
         elif type == 'OBJECTTYPE':
             # It's not uncommon to have more than one ObjectType on an object
