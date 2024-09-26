@@ -1550,7 +1550,8 @@ class EggGroup(EggGroupNode):
 
                 if max_diff > 0.01:
                     data.normals_split_custom_set(self.normals)
-                    data.use_auto_smooth = True
+                    if bpy.app.version <= (4, 0):
+                        data.use_auto_smooth = True
 
             if self.have_vertex_colors:
                 cols = data.vertex_colors.new()
