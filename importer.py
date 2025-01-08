@@ -196,9 +196,14 @@ class EggContext:
             image = bpy.data.images.load(path)
             #image.filepath = path
         else:
-            # Try loading it with the original path, just in case.
             try:
-                image = bpy.data.images.load(path)
+                # If the user has set a backup texture path in preferences, we should check there.
+                backup_path = bpy.context.preferences.addons['blender-egg-importer-master'].preferences.backup_texpath
+                if backup_path and os.path.exists(os.path.join(backup_path, path)):
+                    image = bpy.data.images.load(os.path.join(backup_path, path))
+                else:
+                    # Try loading it with the original path, just in case.
+                    image = bpy.data.images.load(path)
             except RuntimeError:
                 # That failed, of course.  OK, create a new image with this
                 # filename, and issue an error.
