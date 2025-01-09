@@ -198,7 +198,7 @@ class EggContext:
         else:
             try:
                 # If the user has set a backup texture path in preferences, we should check there.
-                backup_path = bpy.context.preferences.addons[__name__.split('.')[0]].preferences.backup_texpath
+                backup_path = bpy.context.preferences.addons[__package__].preferences.backup_texpath
                 if backup_path and os.path.exists(os.path.join(backup_path, path)):
                     image = bpy.data.images.load(os.path.join(backup_path, path))
                 else:
