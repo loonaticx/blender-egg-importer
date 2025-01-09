@@ -1280,7 +1280,8 @@ class EggGroup(EggGroupNode):
         if type in ('SCALAR', 'CHAR*'):
             name = name.lower().replace('_', '-')
 
-            if name in ('collide-mask', 'from-collide-mask', 'into-collide-mask', 'bin', 'draw-order'):
+            if name in ('collide-mask', 'from-collide-mask', 'into-collide-mask', 'bin',
+                        'draw-order', 'scroll-u', 'scroll-v', 'scroll-w'):
                 # YABEE recognizes these scalars as game properties.
                 self.properties[name] = values[0]
             elif name == 'blend':
@@ -1697,6 +1698,29 @@ class EggGroup(EggGroupNode):
                     object.empty_display_type = self.empty_display_type
             else:
                 bpy.context.scene.objects.active = active
+
+            if any(v in self.properties.keys() for v in ('scroll-u', 'scroll-v')):
+                modifier = self.mesh_object.modifiers.new('UVWarp', type='UV_WARP')
+                modifier.uv_layer = DEFAULT_UV_NAME
+
+                def add_uv_driver(obj, mod, prop, scroll_type):
+                    if scroll_type in obj.keys():
+                        drv = mod.driver_add('offset', prop).driver
+                        fps = drv.variables.new()
+                        fps.name = 'fps'
+                        fps.targets[0].id_type = 'SCENE'
+                        fps.targets[0].id = bpy.data.scenes[0]
+                        fps.targets[0].data_path = 'render.fps'
+
+                        scroll = drv.variables.new()
+                        scroll.name = 'scroll_var'
+                        scroll.targets[0].id = obj
+                        scroll.targets[0].data_path = f'["{scroll_type}"]'
+
+                        drv.expression = "(frame/fps)*float(scroll_var)"
+
+                add_uv_driver(self.mesh_object, modifier, 0, 'scroll-u')
+                add_uv_driver(self.mesh_object, modifier, 1, 'scroll-v')
 
         if bpy.app.version >= (2, 80):
             object.select_set(True)
