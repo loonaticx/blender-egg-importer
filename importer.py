@@ -484,18 +484,32 @@ class EggMaterial:
 
     def _make_nodes(self, bmat, textures, use_vertex_color):
         bmat.use_nodes = True
-        bsdf = bmat.node_tree.nodes["Principled BSDF"]
-        bsdf.inputs["Roughness"].default_value = bmat.roughness
-        bsdf.inputs["Metallic"].default_value = bmat.metallic
-        if self.ior is not None:
-            bsdf.inputs["IOR"].default_value = self.ior
-        if self.emit and bsdf.inputs.get("Emission"):
-            bsdf.inputs["Emission"].default_value = self.emit
-        if not any(self.spec[:3]) and bsdf.inputs.get("Specular"):
-            bsdf.inputs["Specular"].default_value = 0.0
+        want_bsdf = bpy.context.preferences.addons[__package__].preferences.want_bsdf
 
-        color_out = bsdf.inputs['Base Color']
-        alpha_out = bsdf.inputs['Alpha']
+        if want_bsdf:
+            bsdf = bmat.node_tree.nodes["Principled BSDF"]
+            bsdf.inputs["Roughness"].default_value = bmat.roughness
+            bsdf.inputs["Metallic"].default_value = bmat.metallic
+            if self.ior is not None:
+                bsdf.inputs["IOR"].default_value = self.ior
+            if self.emit and bsdf.inputs.get("Emission"):
+                bsdf.inputs["Emission"].default_value = self.emit
+            if not any(self.spec[:3]) and bsdf.inputs.get("Specular"):
+                bsdf.inputs["Specular"].default_value = 0.0
+
+            color_out = bsdf.inputs['Base Color']
+            alpha_out = bsdf.inputs['Alpha']
+        else:
+            bsdf = bmat.node_tree.nodes["Principled BSDF"]
+            bmat.node_tree.nodes.remove(bsdf)
+            trans_bsdf = bmat.node_tree.nodes.new("ShaderNodeBsdfTransparent")
+            mix_shader_node = bmat.node_tree.nodes.new("ShaderNodeMixShader")
+
+            bmat.node_tree.links.new(mix_shader_node.inputs[1], trans_bsdf.outputs[0])
+
+            color_out = mix_shader_node.inputs[2]
+            alpha_out = mix_shader_node.inputs[0]
+            alpha_out.default_value = 1.0
 
         if use_vertex_color:
             col_node = bmat.node_tree.nodes.new("ShaderNodeAttribute")
@@ -529,6 +543,9 @@ class EggMaterial:
                         has_alpha = True
                         break
 
+            if has_alpha and not want_bsdf:
+                bmat.blend_method = 'BLEND'
+
             # Create an UVMap node, if none already exists for this UV set.
             uv_layer = texture.uv_name or "UVMap"
             if uv_layer not in uv_nodes:
@@ -559,7 +576,6 @@ class EggMaterial:
 
             if texture.envtype == 'replace':
                 if has_color:
-                    color_out = bsdf.inputs['Base Color']
                     if color_out.is_linked:
                         bmat.node_tree.links.remove(color_out.links[0])
                     bmat.node_tree.links.new(color_out, color)
@@ -600,7 +616,6 @@ class EggMaterial:
                     bmat.node_tree.links.new(color_out, color)
 
                 if has_alpha and texture.envtype != 'decal':
-                    alpha_out = bsdf.inputs['Alpha']
                     if alpha_out.is_linked:
                         # Add a node to multiply the alpha values.
                         mul_node = bmat.node_tree.nodes.new("ShaderNodeMath")
@@ -615,51 +630,52 @@ class EggMaterial:
 
                     bmat.node_tree.links.new(alpha_out, alpha)
 
-            if texture.envtype in ('normal', 'normal_height', 'normal_gloss'):
-                bmat.node_tree.links.new(bsdf.inputs['Normal'], color)
+            if want_bsdf:
+                if texture.envtype in ('normal', 'normal_height', 'normal_gloss'):
+                    bmat.node_tree.links.new(bsdf.inputs['Normal'], color)
 
-            if texture.envtype in ('gloss', 'modulate_gloss', 'normal_gloss'):
-                bmat.node_tree.links.new(bsdf.inputs['Specular'], alpha)
+                if texture.envtype in ('gloss', 'modulate_gloss', 'normal_gloss'):
+                    bmat.node_tree.links.new(bsdf.inputs['Specular'], alpha)
 
-            if texture.envtype in ('glow', 'modulate_glow'):
-                bmat.node_tree.links.new(bsdf.inputs['Emission Strength'], alpha)
+                if texture.envtype in ('glow', 'modulate_glow'):
+                    bmat.node_tree.links.new(bsdf.inputs['Emission Strength'], alpha)
 
-            if texture.envtype == 'emission':
-                # Multiply in the emission color, if we have one.
-                if self.emit and tuple(self.emit[:3]) != (1, 1, 1):
-                    mul_node = bmat.node_tree.nodes.new('ShaderNodeMixRGB')
-                    mul_node.blend_type = 'MULTIPLY'
-                    mul_node.inputs['Fac'].default_value = 1.0
-                    mul_node.inputs['Color2'].default_value = self.emit
+                if texture.envtype == 'emission':
+                    # Multiply in the emission color, if we have one.
+                    if self.emit and tuple(self.emit[:3]) != (1, 1, 1):
+                        mul_node = bmat.node_tree.nodes.new('ShaderNodeMixRGB')
+                        mul_node.blend_type = 'MULTIPLY'
+                        mul_node.inputs['Fac'].default_value = 1.0
+                        mul_node.inputs['Color2'].default_value = self.emit
 
-                    bmat.node_tree.links.new(mul_node.inputs['Color1'], color)
-                    bmat.node_tree.links.new(bsdf.inputs['Emission'], mul_node.outputs[0])
-                else:
-                    bmat.node_tree.links.new(bsdf.inputs['Emission'], mul_node.outputs[0])
+                        bmat.node_tree.links.new(mul_node.inputs['Color1'], color)
+                        bmat.node_tree.links.new(bsdf.inputs['Emission'], mul_node.outputs[0])
+                    else:
+                        bmat.node_tree.links.new(bsdf.inputs['Emission'], mul_node.outputs[0])
 
-            if texture.envtype == 'selector' and \
-               (bmat.metallic != 0.0 or bmat.roughness is None or bmat.roughness != 0.0):
-                # This slot is, by convention, used for metallic-roughness.
-                sep_node = bmat.node_tree.nodes.new('ShaderNodeSeparateRGB')
-                bmat.node_tree.links.new(sep_node.inputs[0], color)
+                if texture.envtype == 'selector' and \
+                   (bmat.metallic != 0.0 or bmat.roughness is None or bmat.roughness != 0.0):
+                    # This slot is, by convention, used for metallic-roughness.
+                    sep_node = bmat.node_tree.nodes.new('ShaderNodeSeparateRGB')
+                    bmat.node_tree.links.new(sep_node.inputs[0], color)
 
-                if bmat.metallic != 1.0:
-                    mul_node = bmat.node_tree.nodes.new("ShaderNodeMath")
-                    mul_node.operation = 'MULTIPLY'
-                    mul_node.inputs[1].default_value = bmat.metallic
-                    bmat.node_tree.links.new(mul_node.inputs[0], sep_node.outputs['B'])
-                    bmat.node_tree.links.new(bsdf.inputs['Metallic'], mul_node.outputs[0])
-                else:
-                    bmat.node_tree.links.new(bsdf.inputs['Metallic'], sep_node.outputs['B'])
+                    if bmat.metallic != 1.0:
+                        mul_node = bmat.node_tree.nodes.new("ShaderNodeMath")
+                        mul_node.operation = 'MULTIPLY'
+                        mul_node.inputs[1].default_value = bmat.metallic
+                        bmat.node_tree.links.new(mul_node.inputs[0], sep_node.outputs['B'])
+                        bmat.node_tree.links.new(bsdf.inputs['Metallic'], mul_node.outputs[0])
+                    else:
+                        bmat.node_tree.links.new(bsdf.inputs['Metallic'], sep_node.outputs['B'])
 
-                if bmat.roughness is not None and bmat.roughness != 1.0:
-                    mul_node = bmat.node_tree.nodes.new("ShaderNodeMath")
-                    mul_node.operation = 'MULTIPLY'
-                    mul_node.inputs[1].default_value = bmat.roughness
-                    bmat.node_tree.links.new(mul_node.inputs[0], sep_node.outputs['G'])
-                    bmat.node_tree.links.new(bsdf.inputs['Roughness'], mul_node.outputs[0])
-                else:
-                    bmat.node_tree.links.new(bsdf.inputs['Roughness'], sep_node.outputs['G'])
+                    if bmat.roughness is not None and bmat.roughness != 1.0:
+                        mul_node = bmat.node_tree.nodes.new("ShaderNodeMath")
+                        mul_node.operation = 'MULTIPLY'
+                        mul_node.inputs[1].default_value = bmat.roughness
+                        bmat.node_tree.links.new(mul_node.inputs[0], sep_node.outputs['G'])
+                        bmat.node_tree.links.new(bsdf.inputs['Roughness'], mul_node.outputs[0])
+                    else:
+                        bmat.node_tree.links.new(bsdf.inputs['Roughness'], sep_node.outputs['G'])
 
         # Assign each node to a column.  The method below ensures that
         # connections always flow from left to right, never right to left.
@@ -680,9 +696,15 @@ class EggMaterial:
                 for link in socket.links:
                     if link.from_node != node:
                         r_assign_nodes_to_column(link.from_node, col - 1)
+        mat_out_node = bmat.node_tree.nodes["Material Output"]
+        mat_in = mat_out_node.inputs[0]
+        if not want_bsdf:
+            if mat_in.is_linked:
+                bmat.node_tree.links.remove(mat_in.links[0])
+            bmat.node_tree.links.new(mat_in, mix_shader_node.outputs[0])
 
         # The "Material Output" node is to the right of the BSDF node.
-        r_assign_nodes_to_column(bmat.node_tree.nodes["Material Output"], 1)
+        r_assign_nodes_to_column(mat_out_node, 1)
 
         column_rows = {}
         for node, col in node_column.items():
