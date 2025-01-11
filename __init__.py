@@ -30,6 +30,42 @@ from bpy import props
 from bpy_extras.io_utils import ImportHelper
 
 
+class EggImporterPreferences(bpy.types.AddonPreferences):
+    bl_idname = __name__
+
+    if bpy.app.version >= (2, 80):
+        backup_texpath: props.StringProperty(
+            name = "Texture path",
+            subtype = "FILE_PATH",
+            description = "Backup texture path to check if the texture can't be "
+                          "found at the location of the .egg"
+        )
+        want_bsdf: props.BoolProperty(
+            name = "Use Principled BSDF",
+            default = True,
+            description = "Determines whether materials will automatically use Principled BSDF. "
+                          "If false, they won't have shading"
+        )
+    else:
+        backup_texpath = props.StringProperty(
+            name="Texture path",
+            subtype="FILE_PATH",
+            description="Backup texture path to check if the texture can't be "
+                        "found at the location of the .egg"
+        )
+        want_bsdf = props.BoolProperty(
+            name="Use Principled BSDF",
+            default=True,
+            description="Determines whether materials will automatically use Principled BSDF. "
+                        "If false, they won't have shading"
+        )
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "backup_texpath")
+        layout.prop(self, "want_bsdf")
+
+
 class IMPORT_OT_egg(bpy.types.Operator, ImportHelper):
     """Import .egg Operator"""
     bl_idname = "import_scene.egg"
@@ -141,10 +177,12 @@ def make_annotations(cls):
             delattr(cls, k)
     return cls
 
+classes = (IMPORT_OT_egg, EggImporterPreferences)
 
 def register():
     make_annotations(IMPORT_OT_egg)
-    bpy.utils.register_class(IMPORT_OT_egg)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
     if bpy.app.version >= (2, 80):
         bpy.types.TOPBAR_MT_file_import.append(menu_func)
@@ -158,7 +196,8 @@ def unregister():
     else:
         bpy.types.INFO_MT_file_import.remove(menu_func)
 
-    bpy.utils.unregister_class(IMPORT_OT_egg)
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
 
 
 if __name__ == "__main__":
