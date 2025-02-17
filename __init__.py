@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Import Panda3D .egg models",
     "author": "rdb, loonatic",
-    "version": (2, 5, 0),
+    "version": (2, 6, 0),
     "blender": (2, 80, 0),
     "location": "File > Import > Panda3D (.egg)",
     "description": "",
