@@ -21,10 +21,6 @@ Find the latest release of the plugin in the [Releases](https://github.com/loona
 - **Please see [this](https://github.com/loonaticx/blender-egg-importer/wiki/Import-Conversion-Notes) wiki page on how Egg data is converted to Blender**
 - See [this](https://github.com/loonaticx/blender-egg-importer/wiki/Supported-&-Unsupported-Features) wiki page for a list of supported & unsupported features.
 
-
-
-Shear animations are not supported at present.  If you have a file that
-contains shear animations, please send it to me.
-
-If you find any bugs, please open a bug report on the issue tracker, and
+## Reporting Issues
+If you find any bugs, please open a bug report on the issue tab, and
 include the egg file that loaded incorrectly.
