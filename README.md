@@ -18,46 +18,10 @@ Find the latest release of the plugin in the [Releases](https://github.com/loona
 ---
 
 ## Features
+- **Please see [this](https://github.com/loonaticx/blender-egg-importer/wiki/Import-Conversion-Notes) wiki page on how Egg data is converted to Blender**
+- See [this](https://github.com/loonaticx/blender-egg-importer/wiki/Supported-&-Unsupported-Features) wiki page for a list of supported & unsupported features.
 
-**Please see [this](https://github.com/loonaticx/blender-egg-importer/wiki/Importing-Notes) wiki page on how Egg data is converted to Blender**
 
-Most features supported by bam2egg are implemented.  In particular, however,
-animation support is not yet finished.  Many other features still need to be
-tested.
-
-Supported features:
-- .egg.pz and .egg.gz files
-- Basic geometry, incl. tristrips and trifans
-- Custom normals
-- Vertex colors
-- All transform types
-- Materials
-- Textures
-- Multitexture modes (modulate, add, decal, blend, normal, glow, gloss, etc.)
-- Tags (as game properties)
-- Collide and ObjectType (as game properties)
-- Collision masks (as game properties)
-- Coordinate system conversion
-- Multiple UV coordinate sets
-- Armatures, skinning
-- Default animation pose
-- Bone animations
-- Morph targets
-- YABEE/flt2egg-style external references ('file' game property)
-
-Yet to do:
-- Improve performance of parser
-- Lines, patches
-- NURBS surfaces and curves
-- Level of detail
-- Support recursive external references
-- Translate texture combine modes to material nodes
-
-## Limitations
-
-Panda3D does not have a concept of "bone length"; the importer does some
-clever tricks to guess what the original bone length might have been, but some
-bones may look wrong.  This should not negatively affect skinning, however.
 
 Shear animations are not supported at present.  If you have a file that
 contains shear animations, please send it to me.
