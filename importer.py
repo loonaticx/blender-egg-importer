@@ -863,7 +863,7 @@ class EggTexture:
                     self.texture.use_normal_map = True
                     self.texture.image.colorspace_settings.name = 'Non-Color'
 
-            elif name == 'minfilter':
+            elif name == 'minfilter' and bpy.app.version <= (2, 80):
                 self.minfilter = values[0].lower()
                 if 'mipmap' in self.minfilter:
                     self.texture.use_mipmap = True
